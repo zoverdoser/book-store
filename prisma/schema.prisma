@@ -1,0 +1,157 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  points    Int      @default(0)
+  role      String   @default("USER")
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  uploads   UserUpload[]
+  pointHistory UserPointHistory[]
+  notifications Notification[]
+}
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Book {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String?
+  coverImage    String?
+  isActive      Boolean  @default(true)
+  pdfFileHash   String?
+  pdfFilePath   String?
+  epubFileHash  String?
+  epubFilePath  String?
+  txtFileHash   String?
+  txtFilePath   String?
+  downloadCount Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  uploads       BookUpload[]
+  authors       BookAuthor[]
+  categories    BookCategory[]
+  tags          BookTag[]
+  pointHistory  UserPointHistory[]
+}
+
+model UserUpload {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  fileHash      String
+  filePath      String
+  fileType      String
+  status        String   @default("PENDING")
+  rejectReason  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+  books         BookUpload[]
+}
+
+model BookUpload {
+  bookId    Int
+  uploadId  Int
+  book      Book       @relation(fields: [bookId], references: [id])
+  upload    UserUpload @relation(fields: [uploadId], references: [id])
+
+  @@id([bookId, uploadId])
+}
+
+model Author {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  books       BookAuthor[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  books     BookCategory[]
+}
+
+model Tag {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  books     BookTag[]
+}
+
+model BookAuthor {
+  bookId   Int
+  authorId Int
+  book     Book   @relation(fields: [bookId], references: [id])
+  author   Author @relation(fields: [authorId], references: [id])
+
+  @@id([bookId, authorId])
+}
+
+model BookCategory {
+  bookId     Int
+  categoryId Int
+  book       Book     @relation(fields: [bookId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@id([bookId, categoryId])
+}
+
+model BookTag {
+  bookId Int
+  tagId  Int
+  book   Book @relation(fields: [bookId], references: [id])
+  tag    Tag  @relation(fields: [tagId], references: [id])
+
+  @@id([bookId, tagId])
+}
+
+model UserPointHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  points    Int
+  type      String
+  bookId    Int?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  book      Book?    @relation(fields: [bookId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
