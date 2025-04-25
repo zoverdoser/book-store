@@ -43,6 +43,7 @@ export default function LoginPage() {
         email: data.email,
         password: data.password,
         redirect: false,
+        callbackUrl: '/',
       })
 
       if (result?.error) {
@@ -58,8 +59,8 @@ export default function LoginPage() {
         title: t('Login.loginSuccess'),
         description: t('Login.welcomeBack'),
       })
+
       router.push('/')
-      router.refresh()
     } catch (error) {
       toast({
         variant: 'destructive',

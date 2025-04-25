@@ -1,6 +1,11 @@
-import { User, Book, Author, Category, Tag, UserUpload, Notification, UserPointHistory } from '@prisma/client'
+import { User as PrismaUser, Book, Author, Category, Tag, UserUpload, Notification, UserPointHistory } from '@prisma/client'
 
-export type { User, Book, Author, Category, Tag, UserUpload, Notification, UserPointHistory }
+export type User = Omit<PrismaUser, 'password' | 'role'> & {
+  id: string
+  role: UserRole
+}
+
+export type { Book, Author, Category, Tag, UserUpload, Notification, UserPointHistory }
 
 export type UserRole = 'USER' | 'ADMIN'
 export type UserStatus = 'ACTIVE' | 'SUSPENDED'

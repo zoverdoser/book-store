@@ -1,19 +1,49 @@
-import { PrismaAdapter } from '@auth/prisma-adapter'
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/db'
 import { compare } from 'bcryptjs'
-
-interface User {
-  id: string
-  email: string
-  role: string
-}
+import type { User } from '@/types/index'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30天
+    updateAge: 24 * 60 * 60, // 24小时
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30天
+    secret: process.env.NEXTAUTH_SECRET,
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60, // 30天
+      },
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
   pages: {
     signIn: '/login',
@@ -22,15 +52,15 @@ export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'credentials',
+      type: 'credentials',
       credentials: {
-        email: { label: '邮箱', type: 'email' },
-        password: { label: '密码', type: 'password' },
+        email: { type: 'email' },
+        password: { type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('请输入邮箱和密码')
         }
-
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email,
@@ -52,9 +82,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user.id.toString(),
+          id: user.id,
           email: user.email,
           role: user.role,
+          points: user.points,
+          createdAt: user.createdAt,
+          status: user.status,
+          updatedAt: user.updatedAt,
         } as User
       },
     }),

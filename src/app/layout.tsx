@@ -4,6 +4,9 @@ import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { Navbar } from '@/components/Navbar'
 import { LanguageProvider } from '@/contexts/LanguageContext'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth/auth'
+import { NextAuthProvider } from '@/components/providers/NextAuthProvider'
 
 export const metadata: Metadata = {
   title: '书店',
@@ -17,14 +20,17 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies()
   const locale = cookieStore.get('NEXT_LOCALE')?.value || 'zh-CN'
+  const session = await getServerSession(authOptions)
 
   return (
     <html lang={locale}>
       <body className={`antialiased`}>
-        <LanguageProvider initialLocale={locale}>
-          <Navbar />
-          {children}
-        </LanguageProvider>
+        <NextAuthProvider session={session}>
+          <LanguageProvider initialLocale={locale}>
+            <Navbar />
+            {children}
+          </LanguageProvider>
+        </NextAuthProvider>
         <Toaster />
       </body>
     </html>

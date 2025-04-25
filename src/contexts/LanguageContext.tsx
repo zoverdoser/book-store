@@ -35,7 +35,13 @@ export function LanguageProvider({ children, initialLocale = 'zh-CN' }: { childr
 
   return (
     <LanguageContext.Provider value={{ locale, setLocale: handleSetLocale, isLoading }}>
-      <NextIntlClientProvider locale={locale} timeZone={'Asia/Shanghai'} messages={messages} now={new Date()}>
+      <NextIntlClientProvider
+        locale={locale}
+        timeZone={'Asia/Shanghai'}
+        messages={messages}
+        now={new Date()}
+        onError={() => null}
+      >
         {children}
       </NextIntlClientProvider>
     </LanguageContext.Provider>

@@ -3,9 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { useSession, signOut } from 'next-auth/react'
+import { Button } from './ui/button'
 
 export function Navbar() {
   const pathname = usePathname()
+  const { data: session, status } = useSession()
 
   return (
     <nav className="flex items-center justify-between p-4 bg-white shadow-sm">
@@ -22,7 +25,28 @@ export function Navbar() {
           </Link>
         </div>
       </div>
-      <LanguageSwitcher />
+      <div className="flex items-center gap-4">
+        {status === 'loading' ? (
+          <div>加载中...</div>
+        ) : session ? (
+          <div className="flex items-center gap-4">
+            <span>{session.user?.email}</span>
+            <Button variant="outline" onClick={() => signOut()}>
+              退出
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4">
+            <Link href="/login">
+              <Button variant="outline">登录</Button>
+            </Link>
+            <Link href="/register">
+              <Button>注册</Button>
+            </Link>
+          </div>
+        )}
+        <LanguageSwitcher />
+      </div>
     </nav>
   )
 }
