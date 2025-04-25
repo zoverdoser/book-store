@@ -12,9 +12,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  return NextResponse.next()
-}
+  if (pathname.startsWith('/admin')) {
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    } else if (token.role !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
 
-export const config = {
-  matcher: ['/login', '/register'],
+  return NextResponse.next()
 }

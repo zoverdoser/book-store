@@ -25,6 +25,8 @@ model User {
   uploads   UserUpload[]
   pointHistory UserPointHistory[]
   notifications Notification[]
+  /// 多对一关系：自动维护的反向引用
+  downloads  BookDownload[]
 }
 
 model VerificationCode {
@@ -39,30 +41,32 @@ model VerificationCode {
 }
 
 model Book {
-  id            Int      @id @default(autoincrement())
-  title         String
-  description   String?
-  coverImage    String?
-  isActive      Boolean  @default(true)
-  pdfFileHash   String?
-  pdfFilePath   String?
-  epubFileHash  String?
-  epubFilePath  String?
-  txtFileHash   String?
-  txtFilePath   String?
-  downloadCount Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  uploads       BookUpload[]
-  authors       BookAuthor[]
-  categories    BookCategory[]
-  tags          BookTag[]
-  pointHistory  UserPointHistory[]
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  cover       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  /// 多对多关系：需要手动维护的关联
+  categories  Category[]
+  /// 多对多关系：需要手动维护的关联
+  tags        Tag[]
+  /// 多对多关系：需要手动维护的关联
+  authors     Author[]
+  /// 多对一关系：自动维护的反向引用
+  uploads     UserUpload[]
+  /// 多对一关系：自动维护的反向引用
+  pointHistory UserPointHistory[]
+  /// 多对一关系：自动维护的反向引用
+  downloads   BookDownload[]
 }
 
 model UserUpload {
   id            Int      @id @default(autoincrement())
   userId        Int
+  /// 一对一关系：自动维护的关联
+  bookId        String
   fileHash      String
   filePath      String
   fileType      String
@@ -70,17 +74,10 @@ model UserUpload {
   rejectReason  String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  /// 一对一关系：自动维护的关联
   user          User     @relation(fields: [userId], references: [id])
-  books         BookUpload[]
-}
-
-model BookUpload {
-  bookId    Int
-  uploadId  Int
-  book      Book       @relation(fields: [bookId], references: [id])
-  upload    UserUpload @relation(fields: [uploadId], references: [id])
-
-  @@id([bookId, uploadId])
+  /// 一对一关系：自动维护的关联
+  book          Book     @relation(fields: [bookId], references: [id])
 }
 
 model Author {
@@ -89,50 +86,22 @@ model Author {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  books       BookAuthor[]
+  /// 多对多关系：自动维护的反向引用
+  books       Book[]
 }
 
 model Category {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  books     BookCategory[]
+  id    String @id @default(cuid())
+  name  String
+  /// 多对多关系：自动维护的反向引用
+  books Book[]
 }
 
 model Tag {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  books     BookTag[]
-}
-
-model BookAuthor {
-  bookId   Int
-  authorId Int
-  book     Book   @relation(fields: [bookId], references: [id])
-  author   Author @relation(fields: [authorId], references: [id])
-
-  @@id([bookId, authorId])
-}
-
-model BookCategory {
-  bookId     Int
-  categoryId Int
-  book       Book     @relation(fields: [bookId], references: [id])
-  category   Category @relation(fields: [categoryId], references: [id])
-
-  @@id([bookId, categoryId])
-}
-
-model BookTag {
-  bookId Int
-  tagId  Int
-  book   Book @relation(fields: [bookId], references: [id])
-  tag    Tag  @relation(fields: [tagId], references: [id])
-
-  @@id([bookId, tagId])
+  id    String @id @default(cuid())
+  name  String
+  /// 多对多关系：自动维护的反向引用
+  books Book[]
 }
 
 model UserPointHistory {
@@ -140,9 +109,12 @@ model UserPointHistory {
   userId    Int
   points    Int
   type      String
-  bookId    Int?
+  /// 一对一关系：自动维护的关联
+  bookId    String?
   createdAt DateTime @default(now())
+  /// 一对一关系：自动维护的关联
   user      User     @relation(fields: [userId], references: [id])
+  /// 一对一关系：自动维护的关联
   book      Book?    @relation(fields: [bookId], references: [id])
 }
 
@@ -153,5 +125,20 @@ model Notification {
   content   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+  /// 一对一关系：自动维护的关联
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model BookDownload {
+  id        Int      @id @default(autoincrement())
+  bookId    String
+  userId    Int
+  createdAt DateTime @default(now())
+  /// 一对一关系：自动维护的关联
+  book      Book     @relation(fields: [bookId], references: [id])
+  /// 一对一关系：自动维护的关联
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([bookId])
+  @@index([userId])
 }

@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
-import './globals.css'
+import './globals.scss'
 import { Toaster } from '@/components/ui/toaster'
 import { Navbar } from '@/components/Navbar'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth/auth'
+import { authOptions } from '@/lib/auth/'
 import { NextAuthProvider } from '@/components/providers/NextAuthProvider'
 
 export const metadata: Metadata = {

@@ -1,13 +1,13 @@
-import { NextResponse } from 'next/server'
 import { hash } from 'bcryptjs'
-import { prisma } from '@/lib/db'
+import { prisma } from '@/lib/prisma'
+import { successResponse, errorResponse } from '@/lib/api-response'
 
 export async function POST(req: Request) {
   try {
     const { email, password, code } = await req.json()
 
     if (!email || !password || !code) {
-      return NextResponse.json({ success: false, msg: 'Register.fillAllFields' }, { status: 200 })
+      return errorResponse('Register.fillAllFields')
     }
 
     const existingUser = await prisma.user.findUnique({
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     })
 
     if (existingUser) {
-      return NextResponse.json({ success: false, msg: 'Register.emailExists' }, { status: 200 })
+      return errorResponse('Register.emailExists')
     }
 
     const verificationCode = await prisma.verificationCode.findUnique({
@@ -23,15 +23,15 @@ export async function POST(req: Request) {
     })
 
     if (!verificationCode) {
-      return NextResponse.json({ success: false, msg: 'Register.getCodeFirst' }, { status: 200 })
+      return errorResponse('Register.getCodeFirst')
     }
 
     if (verificationCode.code !== code) {
-      return NextResponse.json({ success: false, msg: 'Register.invalidCode' }, { status: 200 })
+      return errorResponse('Register.invalidCode')
     }
 
     if (verificationCode.expiresAt < new Date()) {
-      return NextResponse.json({ success: false, msg: 'Register.codeExpired' }, { status: 200 })
+      return errorResponse('Register.codeExpired')
     }
 
     const hashedPassword = await hash(password, 12)
@@ -49,9 +49,9 @@ export async function POST(req: Request) {
       where: { email },
     })
 
-    return NextResponse.json({ success: true, msg: 'Register.success' }, { status: 200 })
+    return successResponse(null)
   } catch (error) {
     console.error('注册错误:', error)
-    return NextResponse.json({ success: false, msg: 'Register.failed' }, { status: 200 })
+    return errorResponse('Register.failed')
   }
 }

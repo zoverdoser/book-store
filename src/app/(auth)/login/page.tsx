@@ -13,7 +13,7 @@ import * as z from 'zod'
 import { useToast } from '@/components/ui/use-toast'
 import { useTranslations } from 'next-intl'
 
-const loginSchema = (t: any) =>
+const loginSchema = (t: (key: string) => string) =>
   z.object({
     email: z.string().email(t('Login.invalidEmail')),
     password: z.string().min(1, t('Login.enterPassword')),

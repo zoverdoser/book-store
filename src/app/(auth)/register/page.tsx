@@ -12,9 +12,11 @@ import * as z from 'zod'
 import { useToast } from '@/components/ui/use-toast'
 import { useTranslations } from 'next-intl'
 
-const emailSchema = (t: any) => z.string().email(t('invalidEmail'))
+type TranslationFunction = (key: string) => string
 
-const registerSchema = (t: any) =>
+const emailSchema = (t: TranslationFunction) => z.string().email(t('invalidEmail'))
+
+const registerSchema = (t: TranslationFunction) =>
   z
     .object({
       email: emailSchema(t),

@@ -1,21 +1,21 @@
-import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { prisma } from '@/lib/db'
+import { prisma } from '@/lib/prisma'
+import { getTranslations } from 'next-intl/server'
+import { cookies } from 'next/headers'
+import { successResponse, errorResponse } from '@/lib/api-response'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: Request) {
+  const cookieStore = await cookies()
+  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'zh-CN'
+  const t = await getTranslations({ locale })
+
   try {
     const { email } = await req.json()
 
     if (!email) {
-      return NextResponse.json(
-        {
-          success: false,
-          msg: 'Register.enterEmail',
-        },
-        { status: 200 },
-      )
+      return errorResponse('enterEmail')
     }
 
     const existingUser = await prisma.user.findUnique({
@@ -23,13 +23,7 @@ export async function POST(req: Request) {
     })
 
     if (existingUser) {
-      return NextResponse.json(
-        {
-          success: false,
-          msg: 'Register.emailExists',
-        },
-        { status: 200 },
-      )
+      return errorResponse('emailExists')
     }
 
     const code = Math.floor(100000 + Math.random() * 900000).toString()
@@ -44,39 +38,21 @@ export async function POST(req: Request) {
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev',
       to: email,
-      subject: 'Register.verifyEmailSubject',
+      subject: t('Register.verifyEmailSubject'),
       html: `
-        <h1>${'Register.verifyEmailWelcome'}</h1>
-        <p>${'Register.verifyEmailVerificationCode'}: <strong>${code}</strong></p>
-        <p>${'Register.verifyEmailCodeExpiresIn'}</p>
+        <h1>${t('Register.verifyEmailWelcome')}</h1>
+        <p>${t('Register.verifyEmailVerificationCode')}: <strong>${code}</strong></p>
+        <p>${t('Register.verifyEmailCodeExpiresIn')}</p>
       `,
     })
     if (error) {
       console.error('发送验证码错误:', error, data)
-      return NextResponse.json(
-        {
-          success: false,
-          msg: 'auth.sendCodeFailed',
-        },
-        { status: 200 },
-      )
+      return errorResponse('sendCodeFailed')
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        msg: 'auth.codeSent',
-      },
-      { status: 200 },
-    )
+    return successResponse(null)
   } catch (error) {
     console.error('发送验证码错误:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        msg: 'auth.sendCodeFailed',
-      },
-      { status: 200 },
-    )
+    return errorResponse('sendCodeFailed')
   }
 }
