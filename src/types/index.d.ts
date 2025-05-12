@@ -16,7 +16,7 @@ declare global {
   }
 
   type Author = PrismaAuthor
-  type Tag = PrismaTag
+  type Tag = Omit<PrismaTag, 'books'>
   type UserUpload = PrismaUserUpload
   type Notification = PrismaNotification
   type UserPointHistory = PrismaUserPointHistory

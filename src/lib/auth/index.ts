@@ -2,6 +2,16 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import { compare } from 'bcryptjs'
+import { DefaultSession } from 'next-auth'
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string
+      role: UserRole
+    } & DefaultSession['user']
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -108,8 +118,8 @@ export const authOptions: NextAuthOptions = {
         ...session,
         user: {
           ...session.user,
-          id: token.id,
-          role: token.role,
+          id: token.id as string,
+          role: token.role as UserRole,
         },
       }
     },
